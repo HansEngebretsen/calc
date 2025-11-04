@@ -1,0 +1,2753 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capital Gains Calculator</title>
+  <link rel="stylesheet" href="https://unpkg.com/open-props@1.7.16/open-props.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'Syntax';
+      src: url('https://assets.codepen.io/18320/FontWithASyntaxHighlighter-Regular.woff2') format('woff2');
+    }
+
+    :root {
+      --brand: var(--green-5);
+      --surface-1: var(--gray-11);
+      --surface-2: var(--gray-10);
+      --text-1: var(--gray-3);
+      --text-2: var(--gray-5);
+      --border-color: var(--gray-9);
+      --status-color: var(--gray-7);
+    }
+
+    body {
+      background-color: var(--surface-1);
+      color: var(--text-1);
+      font-family: monospace;
+      font-size: var(--font-size-00);
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      padding: var(--size-3);
+      accent-color: var(--brand);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      text-wrap: pretty;
+    }
+
+    /* Dev Panel Styles */
+    #dev-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 400px;
+      max-width: 90vw;
+      background: var(--surface-2);
+      border-left: 1px solid var(--border-color);
+      box-shadow: -2px 0 10px rgba(0, 0, 0, 0.3);
+      z-index: 100;
+      transform: translateX(100%);
+      transition: transform .3s ease-in-out;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #dev-panel.is-visible {
+      transform: translateX(0);
+    }
+
+    .dev-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      flex-shrink: 0;
+    }
+
+    #dev-panel h3 {
+      margin: 0;
+      padding: var(--size-2) var(--size-3);
+      font-size: var(--font-size-0);
+      color: var(--text-2);
+    }
+
+    .close-dev-btn {
+      background: none;
+      border: none;
+      color: var(--text-2);
+      cursor: pointer;
+      padding: var(--size-2);
+      font-size: var(--font-size-2);
+      line-height: 1;
+    }
+
+    .dev-controls {
+      padding: var(--size-1) var(--size-3);
+      background: var(--surface-1);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--size-2);
+      font-size: var(--font-size-00);
+      flex-shrink: 0;
+    }
+
+    #dev-log {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding-block: var(--size-3);
+      font-size: var(--font-size-00);
+      position: relative;
+    }
+
+    #dev-log::before {
+      content: '';
+      position: absolute;
+      left: calc(var(--size-3) + 4px);
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background-color: var(--border-color);
+    }
+
+    .log-entry {
+      position: relative;
+      padding-left: calc(var(--size-3) * 2 + 4px);
+      padding-right: var(--size-3);
+      margin-bottom: var(--size-4);
+    }
+
+    .log-entry::before {
+      content: '';
+      position: absolute;
+      left: var(--size-3);
+      top: calc(var(--size-1) + 0.5em);
+      width: 8px;
+      height: 8px;
+      background-color: var(--brand);
+      border: 2px solid var(--surface-2);
+      border-radius: 50%;
+      transform: translateY(-50%);
+    }
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-block: var(--size-1);
+    }
+
+    .log-timestamp {
+      color: var(--gray-6);
+    }
+
+    .log-title {
+      color: var(--brand);
+      font-weight: bold;
+    }
+
+    .log-data {
+      font-family: 'Syntax', monospace;
+      background: var(--surface-1);
+      padding: var(--size-2);
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 200px;
+      overflow-y: auto;
+      border-radius: var(--radius-2);
+      border: 1px solid var(--border-color);
+    }
+
+    #dev-tax-editor {
+      padding: var(--size-3);
+      font-size: var(--font-size-00);
+      overflow-y: auto;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: var(--size-5);
+    }
+
+    #dev-tax-editor h4 {
+      margin: 0;
+      color: var(--text-2);
+    }
+
+    .dev-tax-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--size-3);
+    }
+
+    #apply-tax-config {
+      width: 100%;
+      margin-top: var(--size-3);
+      background-color: var(--purple-5);
+      border: none;
+      color: var(--gray-12);
+      padding: var(--size-2);
+      border-radius: var(--radius-2);
+      cursor: pointer;
+    }
+
+    /* --- Main Calculator Styles --- */
+    #calculator-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      perspective: 1500px;
+    }
+
+    #calculator-wrapper.is-loading .loading-bar {
+      transform: scaleX(1);
+      transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    #calculator-wrapper.is-loading #refresh-btn svg.icon-refresh {
+      animation: spin 1s linear infinite;
+    }
+
+    #calculator-wrapper.in-history-mode .live-indicator-wrapper {
+      opacity: 0;
+    }
+
+    #calculator-wrapper.in-history-mode .history-wrapper {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #calculator-wrapper.is-flipped .flip-btn svg {
+      transform: rotate(180deg);
+    }
+
+    #calculator-wrapper.is-flipped .card-flipper {
+      transform: rotateY(180deg);
+    }
+
+    .flip-btn {
+      position: absolute;
+      top: 20%;
+      left: 100%;
+      transform: translateY(-50%);
+      z-index: 20;
+      width: 45px;
+      height: 45px;
+      background: var(--green-7);
+      border: 1px solid var(--border-color);
+      border-left: none;
+      cursor: pointer;
+      display: none;
+      place-content: center;
+      padding: 0;
+      transition: background-color 0.2s;
+      backface-visibility: hidden;
+    }
+
+    #flip-btn-front {
+      border-radius: 0 var(--radius-2) var(--radius-2) 0;
+    }
+
+    #flip-btn-back {
+      transform: translateY(-50%) rotateY(180deg);
+      border-radius: var(--radius-2) 0 0 var(--radius-2);
+    }
+
+    .flip-btn:hover {
+      background-color: var(--green-6);
+    }
+
+    .flip-btn svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--gray-1);
+      transition: transform 0.6s cubic-bezier(.76, .01, .23, 1);
+    }
+
+    .card-flipper {
+      position: relative;
+      width: 100%;
+      transition: transform 0.8s, height 0.4s ease-in-out;
+      transform-style: preserve-3d;
+    }
+
+    .card-front,
+    .card-back {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      backface-visibility: hidden;
+      background: var(--surface-2);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-3);
+      box-shadow: var(--shadow-5);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-front {
+      padding: var(--size-5);
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+      padding: var(--size-5);
+      gap: var(--size-4);
+      position: relative;
+    }
+
+    #back-to-calc-btn {
+      position: absolute;
+      top: var(--size-4);
+      left: var(--size-4);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: var(--size-2);
+      color: var(--text-2);
+      border-radius: var(--radius-round);
+      z-index: 5;
+    }
+
+    #back-to-calc-btn:hover {
+      color: var(--text-1);
+    }
+
+    #back-to-calc-btn svg {
+      width: 24px;
+      height: 24px;
+      display: block;
+    }
+
+    .save-as-sale-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--size-2);
+      padding: var(--size-2) var(--size-3);
+      background: transparent;
+      color: var(--brand);
+      border: 1px solid var(--brand);
+      border-radius: var(--radius-2);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: var(--font-size-00);
+      transition: all 0.2s ease;
+    }
+
+    .save-as-sale-btn:hover {
+      opacity: 0.8;
+    }
+
+    .save-as-sale-btn svg {
+      width: var(--size-4);
+      height: var(--size-4);
+    }
+
+    .grid {
+      display: grid;
+      gap: var(--size-4) var(--size-5);
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .control {
+      display: flex;
+      flex-direction: column;
+      gap: var(--size-2);
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .slider-pair {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--size-5);
+    }
+
+    label,
+    .label {
+      font-size: var(--font-size-00);
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: var(--font-letterspacing-2);
+      display: flex;
+      align-items: center;
+    }
+
+    .label .info-icon {
+      color: var(--text-2);
+      border-color: var(--text-2);
+    }
+
+    .info-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--text-2);
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      line-height: 1;
+      font-size: 10px;
+      color: var(--text-2);
+      cursor: help;
+      margin-left: var(--size-1);
+      transition: all 0.2s ease;
+    }
+
+    .info-icon:hover {
+      color: var(--text-1);
+      border-color: var(--text-1);
+    }
+
+    .header {
+      grid-column: 1 / -1;
+      margin-block: 0 calc(var(--size-4) * -1);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--size-3);
+      padding-bottom: var(--size-4);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .status-indicator-container {
+      position: relative;
+      width: var(--size-6);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .live-indicator-wrapper {
+      height: var(--size-5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .live-indicator {
+      width: var(--size-2);
+      height: var(--size-2);
+      transition: opacity 0.3s ease;
+      background: var(--status-color);
+      border-radius: var(--radius-round);
+      box-shadow: 0 0 5px var(--status-color);
+    }
+
+    .history-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: var(--size-1);
+      gap: 0;
+      opacity: 0;
+      transition: opacity .3s ease;
+      pointer-events: none;
+      color: var(--gray-7);
+      text-align: center;
+      line-height: 1;
+    }
+
+    .history-day {
+      font-size: var(--font-size-3);
+      font-weight: normal;
+    }
+
+    .history-month {
+      font-size: var(--font-size-00);
+      text-transform: uppercase;
+    }
+
+    .stock-display-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      flex-grow: 1;
+    }
+
+    .chart-status {
+      display: flex;
+      align-items: center;
+      gap: var(--size-1);
+      font-size: var(--font-size-000);
+      color: var(--text-2);
+    }
+
+    .stock-price-line {
+      display: flex;
+      align-items: baseline;
+      gap: var(--size-2);
+      position: relative;
+    }
+
+    .price-input-container {
+      position: relative;
+    }
+
+    .price-input-container::before {
+      content: '$';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: var(--font-size-4);
+      color: var(--text-2);
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    .stock-ticker-group {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .ticker-chevron {
+      color: var(--text-2);
+      font-size: var(--font-size-0);
+      pointer-events: none;
+      position: absolute;
+      right: var(--size-2);
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    #stock-price-input {
+      font-family: inherit;
+      font-size: var(--font-size-4);
+      background: none;
+      border: none;
+      color: var(--text-1);
+      width: 100%;
+      padding: 0;
+      min-width: 8ch;
+      padding-left: 1.2ch;
+    }
+
+    #stock-price-input.loading {
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+
+    #stock-ticker-select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: transparent;
+      border: none;
+      color: var(--text-1);
+      font-family: inherit;
+      font-size: var(--font-size-4);
+      padding: 0;
+      padding-right: var(--size-4);
+      cursor: pointer;
+      field-sizing: content;
+    }
+
+    input:focus-visible,
+    select:focus-visible {
+      outline: 1px solid var(--brand);
+      outline-offset: 1px;
+      box-shadow: 0 0 0 3px var(--surface-1);
+    }
+
+    @keyframes pulse {
+      50% {
+        opacity: .5;
+      }
+    }
+
+    .tax-rate-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--size-2);
+      margin-block-end: var(--size-3);
+    }
+
+    .tax-rates {
+      display: flex;
+      justify-content: flex-start;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-2);
+      padding: var(--size-1);
+      gap: var(--size-1);
+      position: relative;
+    }
+
+    .tax-rates::before {
+      content: '';
+      position: absolute;
+      top: var(--size-1);
+      bottom: var(--size-1);
+      left: var(--selection-offset, 0);
+      width: var(--selection-width, 0);
+      background: var(--brand);
+      border-radius: var(--radius-2);
+      transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 0;
+    }
+
+    .tax-rates-option {
+      display: flex;
+      flex-direction: column;
+      gap: var(--size-1);
+      align-items: center;
+      padding: var(--size-1) var(--size-3);
+      border-radius: var(--radius-2);
+      cursor: pointer;
+      position: relative;
+    }
+
+    .tax-rate-percent {
+      font-size: var(--font-size-1);
+      color: var(--text-1);
+      transition: color .3s ease;
+    }
+
+    .tax-rate-percent .percent-sign {
+      font-size: 0.7em;
+      vertical-align: baseline;
+      margin-left: 1px;
+    }
+
+    .tax-rate-term {
+      font-family: 'Roboto Mono', monospace;
+      font-size: var(--font-size-000);
+      color: var(--text-2);
+      text-transform: capitalize;
+      transition: color .3s ease;
+    }
+
+    .tax-rates input {
+      display: none;
+    }
+
+    .tax-rates input:checked+.tax-rates-option .tax-rate-percent {
+      color: var(--gray-12);
+    }
+
+    .tax-rates input:checked+.tax-rates-option .tax-rate-term {
+      color: var(--gray-10);
+    }
+
+    .tax-description-footnote {
+      font-size: var(--font-size-000);
+      font-style: italic;
+      color: var(--gray-5);
+      text-transform: none;
+      text-align: left;
+    }
+
+    .output {
+      padding: var(--size-3);
+      background: var(--surface-1);
+      border-radius: var(--radius-2);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .output-value {
+      font-size: var(--font-size-2);
+      color: var(--text-1);
+    }
+
+    .output.loss .output-value {
+      color: var(--red-5);
+    }
+
+    .output.gain .output-value {
+      color: var(--green-5);
+    }
+
+    #estimated-tax-output.loss .output-value {
+      color: var(--green-5);
+    }
+
+    #estimated-tax-output.gain .output-value {
+      color: var(--red-5);
+    }
+
+    .output-footnote {
+      font-size: var(--font-size-000);
+      color: var(--text-2);
+      margin-top: var(--size-1);
+      white-space: nowrap;
+    }
+
+    .sparkline-container {
+      position: relative;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    #sparkline {
+      stroke: var(--brand);
+      stroke-width: 1.5;
+      fill: none;
+      overflow: visible;
+      outline: 0;
+      border: 0;
+    }
+
+    .sparkline-path {
+      pointer-events: none;
+    }
+
+    .sparkline-path.animated {
+      stroke-dasharray: var(--sparkline-length);
+      stroke-dashoffset: var(--sparkline-length);
+      animation: draw-sparkline 1.2s 0.2s ease-out forwards;
+    }
+
+    @keyframes draw-sparkline {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    #sparkline-hover-area {
+      fill: transparent;
+      stroke: none;
+    }
+
+    #sparkline-hover-dot {
+      fill: var(--surface-1);
+      stroke: var(--brand);
+      stroke-width: 1.5;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .2s ease;
+    }
+
+    .sparkline-container:hover #sparkline-hover-dot {
+      opacity: 1;
+    }
+
+    #custom-ticker-dialog {
+      background: var(--surface-2);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-3);
+      color: var(--text-1);
+      padding: var(--size-5);
+      width: 90vw;
+      max-width: 600px;
+    }
+
+    #custom-ticker-dialog::backdrop {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+    }
+
+    #custom-ticker-dialog form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--size-4);
+    }
+
+    #custom-ticker-input {
+      font-family: inherit;
+      background: var(--surface-1);
+      border: 1px solid var(--border-color);
+      color: var(--text-1);
+      border-radius: var(--radius-2);
+      padding: var(--size-2);
+      font-size: var(--font-size-1);
+    }
+
+    .dialog-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--size-2);
+    }
+
+    .dialog-buttons button {
+      font-family: inherit;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-2);
+      padding: var(--size-2) var(--size-3);
+      cursor: pointer;
+      background: var(--surface-1);
+      color: var(--text-1);
+    }
+
+    .dialog-buttons button[type="submit"] {
+      background: var(--brand);
+      color: var(--gray-12);
+      border-color: var(--brand);
+    }
+
+    .actions-container {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--size-1);
+      padding-top: var(--size-5);
+      margin-top: auto;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .footer-btn {
+      background: none;
+      border: none;
+      color: var(--text-2);
+      cursor: pointer;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--size-2);
+      font-family: inherit;
+      font-size: var(--font-size-00);
+      transition: color 0.2s ease;
+    }
+
+    .footer-btn:hover {
+      color: var(--text-1);
+    }
+
+    .footer-btn svg {
+      width: var(--size-3);
+      height: var(--size-3);
+    }
+
+    #refresh-btn {
+      background: none;
+      border: none;
+      color: var(--text-2);
+      cursor: pointer;
+      padding: var(--size-1);
+      display: flex;
+      align-items: center;
+      border-radius: var(--radius-round);
+      transition: color 0.2s ease;
+    }
+
+    #refresh-btn:hover {
+      color: var(--text-1);
+    }
+
+    #refresh-btn svg {
+      width: var(--size-3);
+      height: var(--size-3);
+      transition: transform .5s ease;
+    }
+
+    #refresh-btn .icon-close {
+      display: none;
+    }
+
+    #calculator-wrapper.in-history-mode #refresh-btn .icon-refresh {
+      display: none;
+    }
+
+    #calculator-wrapper.in-history-mode #refresh-btn .icon-close {
+      display: block;
+      fill: var(--brand);
+    }
+
+    .loading-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      width: 100%;
+      background-color: var(--brand);
+      transform-origin: left;
+      transform: scaleX(0);
+      transition: transform 1.5s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .settings {
+      grid-column: 1 / -1;
+      border: 1px solid transparent;
+      border-top: 1px solid var(--border-color);
+      border-radius: var(--radius-2);
+      margin-block: 0 calc(var(--size-4) * -1);
+      transition: border-color 0.3s ease-in-out, margin-bottom 0.4s ease-in-out;
+    }
+
+    .settings.is-open {
+      border-color: var(--border-color);
+      margin-bottom: var(--size-4);
+    }
+
+    .settings-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: var(--size-1);
+      padding: var(--size-2);
+      width: 100%;
+      color: var(--text-2);
+      font-family: inherit;
+      font-size: var(--font-size-00);
+      transition: color 0.2s ease;
+    }
+
+    .settings-toggle:hover,
+    .settings-toggle:focus-visible {
+      color: var(--text-1);
+    }
+
+    .settings-toggle svg {
+      width: 18px;
+      height: 18px;
+      transition: color 0.2s;
+      fill: currentColor;
+    }
+
+    .settings-content-wrapper {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease-in-out;
+    }
+
+    .settings-content {
+      padding: 0 var(--size-3) var(--size-5) var(--size-3);
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--size-4);
+    }
+
+    .settings .icon-unfold-less {
+      display: none;
+    }
+
+    .settings.is-open .icon-unfold-more {
+      display: none;
+    }
+
+    .settings.is-open .icon-unfold-less {
+      display: block;
+    }
+
+    .setting-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--size-2);
+    }
+
+    .setting-row.two-col {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--size-5);
+      align-items: flex-end;
+    }
+
+    .setting-row label {
+      color: var(--text-1);
+      text-transform: none;
+    }
+
+    .income-input-wrapper {
+      position: relative;
+    }
+
+    .income-input-wrapper .dollar-sign {
+      position: absolute;
+      left: var(--size-2);
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-2);
+      pointer-events: none;
+    }
+
+    #income-input {
+      padding-left: var(--size-4);
+    }
+
+    input[type=text] {
+      font-family: inherit;
+      background: var(--surface-1);
+      border: 1px solid var(--border-color);
+      color: var(--text-1);
+      border-radius: var(--radius-2);
+      padding: var(--size-2);
+      width: 100%;
+    }
+
+    #income-input,
+    #income-input-back {
+      cursor: ew-resize;
+    }
+
+    .filing-status-toggle {
+      display: flex;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-2);
+      overflow: hidden;
+    }
+
+    .filing-status-toggle label {
+      flex: 1;
+      text-align: center;
+      padding: var(--size-2);
+      background: var(--surface-1);
+      cursor: pointer;
+    }
+
+    .filing-status-toggle input:checked+label {
+      background: var(--brand);
+      color: var(--gray-12);
+    }
+
+    .filing-status-toggle input {
+      display: none;
+    }
+
+    /* Back of Card Styles */
+    .card-back h2 {
+      margin: 0;
+      font-size: var(--font-size-2);
+      color: var(--text-1);
+      text-align: center;
+    }
+
+    .table-wrapper {
+      flex-grow: 1;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-2);
+    }
+
+    @keyframes highlight-fade {
+      from {
+        background-color: color-mix(in srgb, var(--brand) 30%, transparent);
+      }
+
+      to {
+        background-color: transparent;
+      }
+    }
+
+    .transactions-table tbody tr.is-new {
+      animation: highlight-fade 1.5s 0.2s ease-out;
+    }
+
+    .transactions-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--font-size-0);
+    }
+
+    .transactions-table th,
+    .transactions-table td {
+      padding: var(--size-2);
+      text-align: left;
+    }
+
+    .transactions-table [data-tooltip] {
+      text-decoration: underline dotted;
+      text-decoration-thickness: from-font;
+      cursor: help;
+    }
+
+    .transactions-table thead {
+      position: sticky;
+      top: 0;
+      background: var(--surface-1);
+    }
+
+    .transactions-table th {
+      font-weight: normal;
+      color: var(--text-2);
+    }
+
+    .transactions-table tbody tr:not(:last-child) {
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .transactions-table tfoot {
+      position: sticky;
+      bottom: 0;
+      background: var(--surface-1);
+      font-weight: bold;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: var(--red-5);
+      cursor: pointer;
+      font-size: 1.2em;
+    }
+
+    .gain {
+      color: var(--green-5);
+    }
+
+    .loss {
+      color: var(--red-5);
+    }
+
+    .headroom-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--size-3);
+      background: var(--surface-1);
+      padding: var(--size-3);
+      border-radius: var(--radius-2);
+    }
+
+    .headroom-item {
+      display: flex;
+      flex-direction: column;
+      gap: var(--size-1);
+    }
+
+    .headroom-value {
+      font-size: var(--font-size-1);
+      color: var(--brand);
+    }
+
+    .income-sync-container {
+      display: flex;
+      flex-direction: column;
+      gap: var(--size-2);
+      background: var(--surface-1);
+      padding: var(--size-3);
+      border-radius: var(--radius-2);
+    }
+
+    .income-sync-container label {
+      text-transform: none;
+      letter-spacing: normal;
+      text-align: center;
+      color: var(--text-2);
+    }
+
+    .income-sync-container .income-input-wrapper {
+      position: relative;
+      margin: 0 auto;
+      width: 50%;
+    }
+
+    #income-input-back {
+      padding-left: var(--size-4);
+      text-align: center;
+    }
+
+    #app-tooltip {
+      position: fixed;
+      background: var(--surface-1);
+      border: 1px solid var(--border-color);
+      padding: var(--size-1) var(--size-2);
+      border-radius: var(--radius-2);
+      font-size: var(--font-size-0);
+      pointer-events: none;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity .2s ease;
+      text-align: left;
+      line-height: 1.4;
+      max-width: 300px;
+    }
+
+    #app-tooltip.is-visible {
+      opacity: 1;
+    }
+
+    @media (max-width: 480px) {
+
+      .grid,
+      .slider-pair,
+      .headroom-container,
+      .setting-row.two-col,
+      .dev-tax-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .card-front {
+        padding: var(--size-3);
+      }
+
+      #stock-price-input,
+      #stock-ticker-select {
+        font-size: var(--font-size-3);
+      }
+
+      .dev-controls {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      #dev-panel {
+        width: 100%;
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="calculator-wrapper">
+    <div class="card-flipper">
+      <div class="card-front">
+        <div class="grid">
+          <div class="header full-width">
+            <div class="status-indicator-container">
+              <div class="live-indicator-wrapper">
+                <div class="live-indicator"></div>
+              </div>
+              <div class="history-wrapper">
+                <div class="history-day"></div>
+                <div class="history-month"></div>
+              </div>
+            </div>
+            <div class="stock-display-container">
+              <div class="stock-price-line">
+                <div class="stock-ticker-group">
+                  <select id="stock-ticker-select">
+                    <option value="GOOG" selected>GOOG</option>
+                    <option value="VOO">VOO</option>
+                    <option value="META">META</option>
+                    <option value="AAPL">AAPL</option>
+                    <option value="CUSTOM">Custom</option>
+                  </select>
+                  <span class="ticker-chevron">&#9662;</span>
+                </div>
+                <div class="price-input-container">
+                  <input type="text" id="stock-price-input" value="0.00">
+                </div>
+              </div>
+              <div class="chart-status">
+
+                <span id="data-status-text">Last updated: --</span>
+                <button id="refresh-btn" aria-label="Refresh stock data">
+                  <svg class="icon-refresh" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"></path>
+                  </svg>
+                  <svg class="icon-close" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="sparkline-container">
+              <svg id="sparkline" width="100" height="32">
+                <rect id="sparkline-hover-area" width="100%" height="100%"></rect>
+                <polyline class="sparkline-path" points=""></polyline>
+                <circle id="sparkline-hover-dot" r="2.5"></circle>
+              </svg>
+            </div>
+          </div>
+          <div class="settings full-width">
+            <button class="settings-toggle" aria-expanded="false" aria-controls="settings-content-wrapper">
+              <span>Options</span>
+              <svg class="icon-unfold-more" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M0 0h24v24H0V0z" fill="none" />
+                <path d="M12 5.83L15.17 9l1.41-1.41L12 3 7.41 7.59 8.83 9 12 5.83zm0 12.34L8.83 15l-1.41 1.41L12 21l4.59-4.59L15.17 15 12 18.17z" />
+              </svg>
+              <svg class="icon-unfold-less" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M0 0h24v24H0V0z" fill="none" />
+                <path d="M7.41 18.59L8.83 20 12 16.83 15.17 20l1.41-1.41L12 14l-4.59 4.59zm9.18-13.18L15.17 4 12 7.17 8.83 4 7.41 5.41 12 10l4.59-4.59z" />
+              </svg>
+            </button>
+            <div class="settings-content-wrapper" id="settings-content-wrapper">
+              <div class="settings-content">
+                <div class="setting-row two-col">
+                  <div class="control">
+                    <label for="income-input">Estimated Yearly Income</label>
+                    <div class="income-input-wrapper">
+                      <span class="dollar-sign">$</span>
+                      <input type="text" id="income-input" value="500,000" inputmode="numeric">
+                    </div>
+                  </div>
+                  <div class="control">
+                    <label>Filing Status</label>
+                    <div class="filing-status-toggle">
+                      <input type="radio" id="status-joint" name="filing-status" value="joint" checked><label for="status-joint">Married Jointly</label>
+                      <input type="radio" id="status-single" name="filing-status" value="single"><label for="status-single">Single</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="setting-row">
+                  <label><input type="checkbox" id="niit-toggle" checked> Apply 3.8% NIIT</label>
+                  <span class="tax-description-footnote">Net Investment Income Tax applies above $250k (Married) or $200k (Single).</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <dialog id="custom-ticker-dialog">
+            <form id="custom-ticker-form"> <label for="custom-ticker-input">Enter Custom Ticker</label> <input type="text" id="custom-ticker-input" placeholder="e.g., TSLA">
+              <div class="dialog-buttons"> <button value="cancel" formmethod="dialog">Cancel</button> <button type="submit" value="default">Go</button> </div>
+            </form>
+          </dialog>
+
+          <div class="slider-pair">
+            <pretty-slider id="shares-slider" min="0" max="1000" step="1" value="50" label="Shares"></pretty-slider>
+            <pretty-slider id="cost-basis-slider" min="10" max="200" step="1" value="100" label="Basis/Share" dollar-sign></pretty-slider>
+          </div>
+          <div class="control full-width tax-rate-container">
+            <div class="label">Tax Rate</div>
+            <div class="tax-rates">
+              <label> <input type="radio" name="tax-rate" id="rate1">
+                <div class="tax-rates-option"></div>
+              </label>
+              <label> <input type="radio" name="tax-rate" id="rate2" checked>
+                <div class="tax-rates-option"></div>
+              </label>
+              <label> <input type="radio" name="tax-rate" id="rate3">
+                <div class="tax-rates-option"></div>
+              </label>
+            </div>
+            <div id="tax-description-footnote" class="tax-description-footnote"></div>
+          </div>
+          <div class="control">
+            <div id="total-gain-loss-label" class="label">Total <span class="info-icon" data-tooltip-key="total">(?)</span></div>
+            <div class="output gain" id="total-gain-loss-output"> <span class="output-value">$0.00</span><small class="output-footnote"></small> </div>
+          </div>
+          <div class="control">
+            <div id="estimated-tax-label" class="label"><span>Estimated Tax</span> <span class="info-icon" data-tooltip-key="tax">(?)</span></div>
+            <div class="output" id="estimated-tax-output"> <span class="output-value">$0.00</span><small class="output-footnote"></small> </div>
+          </div>
+
+          <div class="actions-container full-width">
+            <button id="save-btn" class="save-as-sale-btn" aria-label="Save as sale">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"></path>
+              </svg>
+              <span>Save as sale</span>
+            </button>
+            <button id="footer-flip-btn" class="footer-btn">
+              <span>Yearly transactions</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor">
+                <path d="M360-120H200q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h160v80H200v560h160v80Zm80 80v-880h80v880h-80Zm160-80v-80h80v80h-80Zm0-640v-80h80v80h-80Zm160 640v-80h80q0 33-23.5 56.5T760-120Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80q33 0 56.5 23.5T840-760h-80Z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="loading-bar"></div>
+      </div>
+      <div class="card-back">
+        <button id="back-to-calc-btn" aria-label="Back to calculator">
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+            <path d="M400-80 0-480l400-400 56 57-343 343 343 343-56 57Z" />
+          </svg>
+        </button>
+        <h2>Yearly Transactions</h2>
+        <div class="table-wrapper">
+          <table class="transactions-table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th># + Basis</th>
+                <th>Sold @</th>
+                <th>Gross</th>
+                <th>Tax</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="transactions-tbody"></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="3">Totals</td>
+                <td id="total-gross-footer"></td>
+                <td id="total-tax-footer"></td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div class="headroom-container">
+          <div class="headroom-item">
+            <div class="label">Long-Term Bracket Headroom <span class="info-icon" data-tooltip-key="lt-headroom">(?)</span></div>
+            <div id="long-term-headroom" class="headroom-value">$0</div>
+          </div>
+          <div class="headroom-item">
+            <div class="label">Short-Term Bracket Headroom <span class="info-icon" data-tooltip-key="st-headroom">(?)</span></div>
+            <div id="short-term-headroom" class="headroom-value">$0</div>
+          </div>
+        </div>
+        <div class="income-sync-container">
+          <label for="income-input-back">Based on estimated yearly income of</label>
+          <div class="income-input-wrapper">
+            <span class="dollar-sign">$</span>
+            <input type="text" id="income-input-back" value="500,000" inputmode="numeric">
+          </div>
+        </div>
+      </div>
+      <button id="flip-btn-front" class="flip-btn" aria-label="Flip card">
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
+          <path d="M360-120H200q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h160v80H200v560h160v80Zm80 80v-880h80v880h-80Zm160-80v-80h80v80h-80Zm0-640v-80h80v80h-80Zm160 640v-80h80q0 33-23.5 56.5T760-120Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80q33 0 56.5 23.5T840-760h-80Z" />
+        </svg>
+      </button>
+      <button id="flip-btn-back" class="flip-btn" aria-label="Flip card">
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
+          <path d="M360-120H200q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h160v80H200v560h160v80Zm80 80v-880h80v880h-80Zm160-80v-80h80v80h-80Zm0-640v-80h80v80h-80Zm160 640v-80h80q0 33-23.5 56.5T760-120Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80q33 0 56.5 23.5T840-760h-80Z" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="app-tooltip"></div>
+
+  <div id="dev-panel">
+    <div class="dev-header">
+      <h3>Dev Mode Console</h3><button class="close-dev-btn">&times;</button>
+    </div>
+    <div class="dev-controls">
+      <div id="api-override-controls" style="display: flex; gap: var(--size-2); align-items: center;">
+        <span>API:</span>
+        <label><input type="radio" name="api-override" value="mock" checked> Mock</label>
+        <label><input type="radio" name="api-override" value="cache"> Cache</label>
+        <label><input type="radio" name="api-override" value="live"> Live</label>
+      </div>
+    </div>
+    <div id="dev-tax-editor">
+      <h4>Tax Bracket Editor</h4>
+      <div class="dev-tax-grid">
+        <pretty-slider theme="purple" id="dev-lt-joint" label="LT Joint (15%)" min="500000" max="700000" step="100"></pretty-slider>
+        <pretty-slider theme="purple" id="dev-lt-single" label="LT Single (15%)" min="450000" max="650000" step="100"></pretty-slider>
+      </div>
+      <div class="dev-tax-grid">
+        <pretty-slider theme="purple" id="dev-niit-joint" label="NIIT Joint" min="200000" max="300000" step="100"></pretty-slider>
+        <pretty-slider theme="purple" id="dev-niit-single" label="NIIT Single" min="150000" max="250000" step="100"></pretty-slider>
+      </div>
+      <button id="apply-tax-config">Apply & Recalculate</button>
+    </div>
+    <div id="dev-log"></div>
+  </div>
+
+  <script type="module">
+    // --- PRETTY SLIDER WEB COMPONENT ---
+    class PrettySlider extends HTMLElement {
+      static get observedAttributes() {
+        return ['value', 'max', 'step'];
+      }
+      constructor() {
+        super();
+        this.attachShadow({
+          mode: 'open'
+        });
+        this.value = parseFloat(this.getAttribute('value')) || 0;
+      }
+      connectedCallback() {
+        this.render();
+        this.rangeInput = this.shadowRoot.querySelector('input[type="range"]');
+        this.numberInput = this.shadowRoot.querySelector('input[type="number"]');
+        this.rangeInput.addEventListener('input', this.onRangeInput.bind(this));
+        this.numberInput.addEventListener('input', this.onNumberInput.bind(this));
+        this.numberInput.addEventListener('blur', this.onNumberBlur.bind(this));
+        let isDragging = false;
+        let startX = 0;
+        let startValue = 0;
+        this.numberInput.addEventListener('mousedown', (e) => {
+          isDragging = true;
+          startX = e.clientX;
+          startValue = this.value;
+          this.numberInput.style.cursor = 'ew-resize';
+          document.body.style.cursor = 'ew-resize';
+          document.body.style.userSelect = 'none';
+        });
+        window.addEventListener('mousemove', (e) => {
+          if (isDragging) {
+            const dx = e.clientX - startX;
+            const step = parseFloat(this.getAttribute('step')) || 1;
+            const sensitivity = step < 1 ? 0.5 : 1;
+            let newValue = startValue + dx * sensitivity;
+            const min = parseFloat(this.getAttribute('min'));
+            const max = parseFloat(this.getAttribute('max'));
+            newValue = Math.max(min, Math.min(max, newValue));
+            this.value = newValue;
+            this.rangeInput.value = newValue;
+            this.updateDisplay();
+            this.dispatchChange();
+          }
+        });
+        window.addEventListener('mouseup', () => {
+          if (isDragging) {
+            isDragging = false;
+            this.numberInput.style.cursor = 'ew-resize';
+            document.body.style.cursor = 'default';
+            document.body.style.userSelect = 'auto';
+          }
+        });
+        this.updateDisplay();
+      }
+      attributeChangedCallback(name, oldValue, newValue) {
+        if (oldValue === newValue) return;
+        if (name === 'value') {
+          this.value = parseFloat(newValue);
+        }
+        if (this.rangeInput) {
+          this.rangeInput[name] = newValue;
+        }
+        if (this.numberInput) {
+          this.numberInput[name] = newValue;
+        }
+        if (this.value > parseFloat(this.getAttribute('max'))) {
+          this.setAttribute('value', this.getAttribute('max'));
+        }
+        this.updateDisplay();
+      }
+      onRangeInput(event) {
+        this.value = parseFloat(event.target.value);
+        this.updateDisplay();
+        this.dispatchChange();
+      }
+      onNumberInput(event) {
+        this.value = parseFloat(event.target.value) || 0;
+        this.rangeInput.value = this.value;
+        this.dispatchChange();
+      }
+      onNumberBlur() {
+        this.updateDisplay();
+      }
+      dispatchChange() {
+        this.dispatchEvent(new CustomEvent('change', {
+          detail: {
+            value: this.value
+          },
+          bubbles: true,
+          composed: true
+        }));
+      }
+      updateDisplay() {
+        if (this.numberInput) {
+          const step = parseFloat(this.getAttribute('step')) || 1;
+          this.numberInput.value = this.value.toFixed(step < 1 ? 2 : 0);
+        }
+      }
+      render() {
+        const value = this.getAttribute('value') || 0;
+        const min = this.getAttribute('min') || 0;
+        const max = this.getAttribute('max') || 100;
+        const step = this.getAttribute('step') || 1;
+        const hasDollarSign = this.hasAttribute('dollar-sign');
+        this.shadowRoot.innerHTML = `
+                <style>
+                    :host { display: flex; flex-direction: column; gap: var(--size-2); --brand: var(--green-5); }
+                    :host([theme="purple"]) { --brand: var(--purple-5); }
+                    label { font-size: var(--font-size-00); color: var(--text-2); text-transform: uppercase; letter-spacing: var(--font-letterspacing-2); }
+                    .input-wrapper { display: grid; grid-template-columns: 8ch 1fr; gap: var(--size-3); align-items: center; font-family: inherit; color: var(--text-1); }
+                    .number-input-wrapper { position: relative; }
+                    .dollar-sign { position: absolute; left: var(--size-2); top: 50%; transform: translateY(-50%); font-size: var(--font-size-1); color: var(--text-2); opacity: 0.3; pointer-events: none; }
+                    input[type="number"] { font-size: var(--font-size-1); text-align: left; background: none; border: none; border-radius: var(--radius-2); color: inherit; font-family: inherit; padding: var(--size-1); padding-left: ${hasDollarSign ? 'var(--size-4)' : 'var(--size-1)'}; cursor: ew-resize; width: 100%; }
+                    input[type="number"]:focus-visible { outline: 1px solid var(--brand); box-shadow: 0 0 0 3px var(--surface-1); }
+                    input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+                    input[type=number] { -moz-appearance: textfield; }
+                    input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 16px; background: transparent; margin: 0; cursor: pointer; }
+                    input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: var(--gray-8); border-radius: var(--radius-round); }
+                    input[type="range"]::-moz-range-track { width: 100%; height: 4px; background: var(--gray-8); border-radius: var(--radius-round); }
+                    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; background: var(--brand); border-radius: var(--radius-round); border: 2px solid var(--surface-1); margin-top: -6px; }
+                    input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; background: var(--brand); border-radius: var(--radius-round); border: 2px solid var(--surface-1); }
+                </style>
+                <label for="number-input">${this.getAttribute('label')}</label>
+                <div class="input-wrapper">
+                    <div class="number-input-wrapper">
+                        ${hasDollarSign ? '<span class="dollar-sign">$</span>' : ''}
+                        <input type="number" id="number-input" class="value-box" value="${value}" min="${min}" max="${max}" step="${step}">
+                    </div>
+                    <input type="range" min="${min}" max="${max}" step="${step}" value="${value}">
+                </div>
+            `;
+      }
+    }
+    customElements.define('pretty-slider', PrettySlider);
+    // --- MAIN CALCULATOR SCRIPT ---
+    const calculatorWrapper = document.getElementById('calculator-wrapper');
+    let TAX_CONFIG_2025 = {
+      year: 2025,
+      longTerm: {
+        joint: {
+          0: 98450,
+          0.15: 600050,
+          0.20: Infinity
+        },
+        single: {
+          0: 49225,
+          0.15: 541450,
+          0.20: Infinity
+        }
+      },
+      shortTerm: {
+        joint: {
+          0.10: 24600,
+          0.12: 99850,
+          0.22: 213200,
+          0.24: 403600,
+          0.32: 511700,
+          0.35: 767500,
+          0.37: Infinity
+        },
+        single: {
+          0.10: 12300,
+          0.12: 49925,
+          0.22: 106600,
+          0.24: 201800,
+          0.32: 255850,
+          0.35: 639550,
+          0.37: Infinity
+        }
+      },
+      niit: {
+        threshold: {
+          joint: 250000,
+          single: 200000
+        },
+        rate: 0.038
+      }
+    };
+    const USER_MOCK_DATA = {
+      "GOOG": {
+        "daily_prices_last_30_trading_days": {
+          "2025-09-10": 243.68,
+          "2025-09-09": 239.91,
+          "2025-09-08": 234.16,
+          "2025-09-05": 235.17,
+          "2025-09-04": 232.66,
+          "2025-09-03": 231.10,
+          "2025-09-02": 228.45,
+          "2025-08-29": 226.99,
+          "2025-08-28": 225.37,
+          "2025-08-27": 227.21,
+          "2025-08-26": 224.95,
+          "2025-08-25": 223.16,
+          "2025-08-22": 220.72,
+          "2025-08-21": 222.62,
+          "2025-08-20": 219.19,
+          "2025-08-19": 217.49,
+          "2025-08-18": 215.29,
+          "2025-08-15": 214.91,
+          "2025-08-14": 212.82,
+          "2025-08-13": 213.03,
+          "2025-08-12": 211.16,
+          "2025-08-11": 210.63,
+          "2025-08-08": 208.11,
+          "2025-08-07": 209.54,
+          "2025-08-06": 207.88,
+          "2025-08-05": 206.21,
+          "2025-08-04": 205.99,
+          "2025-08-01": 203.45,
+          "2025-07-31": 201.89,
+          "2025-07-30": 200.23
+        },
+        "latestDateString": "2025-09-10"
+      },
+      "VOO": {
+        "daily_prices_last_30_trading_days": {
+          "2025-09-10": 551.21,
+          "2025-09-09": 548.33,
+          "2025-09-08": 542.98,
+          "2025-09-05": 546.12,
+          "2025-09-04": 541.01,
+          "2025-09-03": 538.76,
+          "2025-09-02": 535.11,
+          "2025-08-29": 530.99,
+          "2025-08-28": 528.43,
+          "2025-08-27": 525.01,
+          "2025-08-26": 527.88,
+          "2025-08-25": 524.32,
+          "2025-08-22": 520.12,
+          "2025-08-21": 518.76,
+          "2025-08-20": 515.34,
+          "2025-08-19": 512.98,
+          "2025-08-18": 510.11,
+          "2025-08-15": 508.45,
+          "2025-08-14": 505.23,
+          "2025-08-13": 503.98,
+          "2025-08-12": 501.22,
+          "2025-08-11": 499.87,
+          "2025-08-08": 497.12,
+          "2025-08-07": 495.34,
+          "2025-08-06": 493.01,
+          "2025-08-05": 490.21,
+          "2025-08-04": 488.76,
+          "2025-08-01": 486.32,
+          "2025-07-31": 484.01,
+          "2025-07-30": 482.99
+        },
+        "latestDateString": "2025-09-10"
+      },
+      "META": {
+        "daily_prices_last_30_trading_days": {
+          "2025-09-10": 518.32,
+          "2025-09-09": 515.67,
+          "2025-09-08": 510.23,
+          "2025-09-05": 513.98,
+          "2025-09-04": 509.43,
+          "2025-09-03": 506.12,
+          "2025-09-02": 502.87,
+          "2025-08-29": 499.34,
+          "2025-08-28": 496.01,
+          "2025-08-27": 493.87,
+          "2025-08-26": 490.23,
+          "2025-08-25": 488.98,
+          "2025-08-22": 485.43,
+          "2025-08-21": 483.01,
+          "2025-08-20": 480.23,
+          "2025-08-19": 478.98,
+          "2025-08-18": 476.12,
+          "2025-08-15": 473.56,
+          "2025-08-14": 470.23,
+          "2025-08-13": 468.99,
+          "2025-08-12": 465.34,
+          "2025-08-11": 463.01,
+          "2025-08-08": 460.23,
+          "2025-08-07": 458.12,
+          "2025-08-06": 455.78,
+          "2025-08-05": 453.99,
+          "2025-08-04": 451.23,
+          "2025-08-01": 449.01,
+          "2025-07-31": 447.87,
+          "2025-07-30": 445.32
+        },
+        "latestDateString": "2025-09-10"
+      },
+      "AAPL": {
+        "daily_prices_last_30_trading_days": {
+          "2025-09-10": 218.98,
+          "2025-09-09": 216.45,
+          "2025-09-08": 214.23,
+          "2025-09-05": 217.87,
+          "2025-09-04": 213.99,
+          "2025-09-03": 212.45,
+          "2025-09-02": 210.12,
+          "2025-08-29": 208.98,
+          "2025-08-28": 206.54,
+          "2025-08-27": 204.23,
+          "2025-08-26": 202.99,
+          "2025-08-25": 201.01,
+          "2025-08-22": 199.87,
+          "2025-08-21": 197.43,
+          "2025-08-20": 195.99,
+          "2025-08-19": 193.21,
+          "2025-08-18": 191.87,
+          "2025-08-15": 190.01,
+          "2025-08-14": 188.45,
+          "2025-08-13": 186.99,
+          "2025-08-12": 184.23,
+          "2025-08-11": 182.98,
+          "2025-08-08": 180.12,
+          "2025-08-07": 178.98,
+          "2025-08-06": 176.43,
+          "2025-08-05": 175.01,
+          "2025-08-04": 173.21,
+          "2025-08-01": 171.99,
+          "2025-07-31": 170.12,
+          "2025-07-30": 168.87
+        },
+        "latestDateString": "2025-09-10"
+      }
+    };
+    const state = {
+      ticker: 'GOOG',
+      shares: 50,
+      costBasis: 100,
+      taxRate: 0.188,
+      stockData: {},
+      devModeVisible: false,
+      apiOverrideMode: 'live', // Default to live, as requested
+      transactions: [],
+      isFlipped: false,
+      lastAddedId: null,
+    };
+    let sparklineData = [];
+    const SPARKLINE_HEIGHT = 32;
+    let isInHistoryMode = false;
+    let manualTaxRateOverride = false;
+    const companyNames = {
+      'GOOG': 'Alphabet Inc.',
+      'VOO': 'Vanguard S&P 500 ETF',
+      'META': 'Meta Platforms, Inc.',
+      'AAPL': 'Apple Inc.'
+    };
+    const apiKeys = ['RQCZE3FNX0344S9D', 'LF6R8QOTKQ7DIPXT', '9ZG0UF88B5JYQ8OZ', '294OEGTTRIGD7ZB'];
+    let currentApiKeyIndex = 0;
+    const tooltipContent = {
+      total: '',
+      tax: '',
+      ltHeadroom: '',
+      stHeadroom: ''
+    };
+    const formatCurrency = (val, sign = true) => {
+      if (val === Infinity) return '∞';
+      const prefix = val < 0 ? '-' : '';
+      const value = Math.abs(val).toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      });
+      return `${sign ? prefix : ''}$${value}`;
+    }
+    const logToDevPanel = (title, data) => {
+      const devLog = document.querySelector('#dev-log');
+      if (devLog) {
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        logEntry.innerHTML = `<div class="log-header"><span class="log-title">${title}</span><span class="log-timestamp">${timestamp}</span></div><pre class="log-data">${JSON.stringify(data, null, 2)}</pre>`;
+        devLog.prepend(logEntry);
+      }
+    };
+    const toggleDevPanel = () => {
+      state.devModeVisible = !state.devModeVisible;
+      document.querySelector('#dev-panel').classList.toggle('is-visible', state.devModeVisible);
+    };
+    const getMockTimeSeries = (ticker) => {
+      const cache = JSON.parse(localStorage.getItem('alphaVantageCache')) || {};
+      const cachedItem = cache[ticker];
+      if (cachedItem) {
+        const timeSeries = cachedItem.data;
+        const latestDateString = Object.keys(timeSeries).sort((a, b) => new Date(b) - new Date(a))[0];
+        return {
+          timeSeries,
+          latestDateString
+        };
+      }
+      if (USER_MOCK_DATA[ticker]) {
+        const timeSeries = {};
+        const prices = USER_MOCK_DATA[ticker].daily_prices_last_30_trading_days;
+        for (const date in prices) {
+          timeSeries[date] = {
+            '4. close': prices[date].toFixed(4)
+          };
+        }
+        return {
+          timeSeries,
+          latestDateString: USER_MOCK_DATA[ticker].latestDateString
+        };
+      }
+      // Fallback for custom tickers not in the mock data
+      const timeSeries = {};
+      let lastPrice = 250;
+      let latestDateString = '';
+      const today = new Date();
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i - 1);
+        if (date.getDay() === 0 || date.getDay() === 6) continue;
+        const dateString = date.toISOString().split('T')[0];
+        lastPrice += (Math.random() - 0.5) * (lastPrice * 0.02);
+        timeSeries[dateString] = {
+          '4. close': lastPrice.toFixed(4)
+        };
+        latestDateString = dateString;
+      }
+      return {
+        timeSeries,
+        latestDateString
+      };
+    };
+    const alphaVantageApiCall = async (ticker) => {
+      const initialKeyIndex = currentApiKeyIndex;
+      for (let i = 0; i < apiKeys.length; i++) {
+        const keyIndex = (initialKeyIndex + i) % apiKeys.length;
+        const apiKey = apiKeys[keyIndex];
+        const apiUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${ticker}&apikey=${apiKey}`;
+        logToDevPanel(`API Request for: ${ticker}`, {
+          keyIndex,
+          apiKey: `...${apiKey.slice(-4)}`
+        });
+        try {
+          const response = await fetch(apiUrl);
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const data = await response.json();
+          logToDevPanel(`API Raw Response for: ${ticker}`, {
+            data,
+            keyIndex
+          });
+          const errorMessage = data["Information"] || data["Error Message"];
+          if (errorMessage) {
+            if (errorMessage.includes('API rate limit') || errorMessage.includes('premium')) {
+              logToDevPanel(`Key ${keyIndex} is rate-limited. Trying next.`, {});
+              continue;
+            } else {
+              throw new Error(errorMessage);
+            }
+          }
+          const timeSeries = data["Time Series (Daily)"];
+          if (!timeSeries) throw new Error("Invalid response format from API.");
+          currentApiKeyIndex = keyIndex;
+          return timeSeries;
+        } catch (error) {
+          logToDevPanel(`Error with key ${keyIndex}`, {
+            error: error.message
+          });
+        }
+      }
+      throw new Error('All API keys failed or are rate-limited.');
+    };
+    const fetchSingleTickerData = async (ticker, forceRefresh = false, apiMode = state.apiOverrideMode) => {
+      const cacheKey = 'alphaVantageCache';
+      const STALE_DURATION = 2 * 60 * 60 * 1000; // 2 hours
+      let cache = JSON.parse(localStorage.getItem(cacheKey)) || {};
+      const now = Date.now();
+      const cachedItem = cache[ticker];
+      const useMockData = (reason) => {
+        logToDevPanel(reason, {
+          ticker
+        });
+        const {
+          timeSeries,
+          latestDateString
+        } = getMockTimeSeries(ticker);
+        const mockTimestamp = new Date(latestDateString).getTime();
+        return {
+          data: timeSeries,
+          status: 'mock',
+          timestamp: mockTimestamp
+        };
+      };
+      const makeApiCall = async () => {
+        try {
+          const timeSeries = await alphaVantageApiCall(ticker);
+          cache[ticker] = {
+            timestamp: now,
+            data: timeSeries
+          };
+          localStorage.setItem(cacheKey, JSON.stringify(cache));
+          logToDevPanel(`API SUCCESS & Cache SET for ${ticker}`, {
+            at: new Date(now).toISOString()
+          });
+          return {
+            data: timeSeries,
+            status: 'live',
+            timestamp: now
+          };
+        } catch (error) {
+          if (cachedItem) {
+            logToDevPanel(`API FAILED for ${ticker}, using STALE CACHE.`, {
+              error: error.message,
+              cache_date: new Date(cachedItem.timestamp).toISOString()
+            });
+            return {
+              data: cachedItem.data,
+              status: 'stale',
+              timestamp: cachedItem.timestamp
+            };
+          }
+          return useMockData(`API FAILED for ${ticker}, NO CACHE found. Using MOCK data.`);
+        }
+      };
+      // Handle dev tool overrides
+      if (apiMode === 'mock') {
+        return useMockData('Dev Toggle: Forcing MOCK data');
+      }
+      if (apiMode === 'cache') {
+        logToDevPanel('Dev Toggle: Forcing LOCAL CACHE only', {
+          ticker
+        });
+        if (cachedItem) {
+          return {
+            data: cachedItem.data,
+            status: 'fresh',
+            timestamp: cachedItem.timestamp
+          };
+        }
+        return useMockData('Cache MISS (Forced), falling back to MOCK');
+      }
+      // If apiMode is 'live', forceRefresh will be true (from button click) or we continue to default logic.
+      if (apiMode === 'live' && forceRefresh) {
+        return makeApiCall();
+      }
+      // ------ DEFAULT LOGIC (Live by default) ------
+      // 1. Check for fresh cache
+      if (cachedItem && !forceRefresh) {
+        const age = now - cachedItem.timestamp;
+        if (age < STALE_DURATION) {
+          logToDevPanel(`Cache HIT (Fresh) for ${ticker}`, {
+            from: new Date(cachedItem.timestamp).toISOString()
+          });
+          return {
+            data: cachedItem.data,
+            status: 'fresh',
+            timestamp: cachedItem.timestamp
+          };
+        } else {
+          logToDevPanel(`Cache HIT (Stale) for ${ticker}, proceeding to API call.`, {
+            from: new Date(cachedItem.timestamp).toISOString()
+          });
+        }
+      }
+      // 2. No fresh cache, or refresh forced: try live API
+      return makeApiCall();
+    };
+    const processTimeSeries = (timeSeries) => {
+      const dates = Object.keys(timeSeries).sort((a, b) => new Date(b) - new Date(a));
+      const latestDate = dates[0];
+      const currentPrice = parseFloat(timeSeries[latestDate]['4. close']);
+      const daily_prices_last_30_trading_days = {};
+      const localSparklineData = [];
+      dates.slice(0, 30).reverse().forEach(date => {
+        const price = parseFloat(timeSeries[date]['4. close']);
+        daily_prices_last_30_trading_days[date] = price;
+        localSparklineData.push({
+          date,
+          price
+        });
+      });
+      const fullSparklineData = dates.map(date => ({
+        date,
+        price: parseFloat(timeSeries[date]['4. close'])
+      })).reverse();
+      return {
+        [latestDate]: currentPrice,
+        daily_prices_last_30_trading_days,
+        sparklineData: localSparklineData,
+        fullSparklineData,
+        latestDateString: latestDate
+      };
+    };
+    const fetchStockData = async (tickersToFetch, forceRefresh = false, apiMode = state.apiOverrideMode) => {
+      setHistoryMode(false);
+      setLoadingState(true);
+      logToDevPanel('Stock Data Query Started', {
+        tickers: tickersToFetch,
+        forceRefresh,
+        apiMode
+      });
+      for (const ticker of tickersToFetch) {
+        const {
+          data,
+          status,
+          timestamp
+        } = await fetchSingleTickerData(ticker, forceRefresh, apiMode);
+        if (data) {
+          const processedData = processTimeSeries(data);
+          state.stockData[ticker] = {
+            ...processedData,
+            status,
+            timestamp,
+          };
+        }
+      }
+      logToDevPanel('Stock Data Processed', state.stockData);
+      updateUIWithData();
+      setLoadingState(false);
+    };
+    const updateCardHeight = () => {
+      const flipper = document.querySelector('.card-flipper');
+      const front = document.querySelector('.card-front');
+      const back = document.querySelector('.card-back');
+      if (flipper && front && back) {
+        const targetHeight = state.isFlipped ? back.scrollHeight : front.scrollHeight;
+        flipper.style.height = targetHeight + 'px';
+      }
+    };
+    const setLoadingState = (isLoading) => {
+      calculatorWrapper.classList.toggle('is-loading', isLoading);
+      const priceInput = document.querySelector('#stock-price-input');
+      if (isLoading) {
+        priceInput.value = '---.--';
+        priceInput.classList.add('loading');
+      } else {
+        priceInput.classList.remove('loading');
+      }
+    };
+    const setHistoryMode = (isHistory, date = null) => {
+      isInHistoryMode = isHistory;
+      calculatorWrapper.classList.toggle('in-history-mode', isHistory);
+      const historyDayEl = document.querySelector('.history-day');
+      const historyMonthEl = document.querySelector('.history-month');
+      const refreshBtn = document.querySelector('#refresh-btn');
+      if (isHistory) {
+        const d = new Date(date + 'T00:00:00');
+        historyDayEl.textContent = d.getDate();
+        historyMonthEl.textContent = d.toLocaleDateString('en-US', {
+          month: 'short'
+        });
+        document.querySelector('#data-status-text').textContent = `Price from: ${date}`;
+        refreshBtn.setAttribute('aria-label', 'Return to live data');
+      } else {
+        historyDayEl.textContent = '';
+        historyMonthEl.textContent = '';
+        const tickerData = state.stockData[state.ticker];
+        if (tickerData) {
+          updateDataStatusIndicator(tickerData.status, tickerData.timestamp);
+        }
+        refreshBtn.setAttribute('aria-label', 'Refresh stock data');
+      }
+    };
+    const updateDataStatusIndicator = (status, timestamp) => {
+      if (isInHistoryMode) return;
+      const indicator = document.querySelector('.live-indicator');
+      const dataStatusEl = document.querySelector('#data-status-text');
+      switch (status) {
+        case 'live':
+        case 'fresh':
+          indicator.style.setProperty('--status-color', 'var(--green-5)');
+          indicator.style.boxShadow = `0 0 5px var(--green-5)`;
+          dataStatusEl.textContent = `${status === 'live' ? 'Live' : 'Fresh'} data as of: ${new Date(timestamp).toLocaleTimeString()}`;
+          break;
+        case 'stale':
+          indicator.style.setProperty('--status-color', 'var(--gray-5)');
+          indicator.style.boxShadow = `0 0 5px var(--gray-5)`;
+          dataStatusEl.textContent = `Cached data as of: ${new Date(timestamp).toLocaleTimeString()}`;
+          break;
+        case 'mock':
+          indicator.style.setProperty('--status-color', 'var(--red-5)');
+          indicator.style.boxShadow = `0 0 5px var(--red-5)`;
+          dataStatusEl.textContent = `Mock data from: ${new Date(timestamp).toLocaleDateString()}`;
+          break;
+        default:
+          indicator.style.setProperty('--status-color', 'var(--gray-7)');
+          indicator.style.boxShadow = `none`;
+          dataStatusEl.textContent = `Last updated: --`;
+      }
+    };
+    const updateUIWithData = () => {
+      const tickerData = state.stockData[state.ticker];
+      if (!tickerData) {
+        document.querySelector('#stock-price-input').value = 'N/A';
+        return;
+      };
+      const {
+        sparklineData: newSparklineData,
+        status,
+        timestamp,
+        latestDateString
+      } = tickerData;
+      updateDataStatusIndicator(status, timestamp);
+      const currentPrice = tickerData[latestDateString];
+      document.querySelector('#stock-price-input').value = currentPrice.toFixed(2);
+      const basisSlider = document.querySelector('#cost-basis-slider');
+      const newMaxBasis = parseFloat((currentPrice * 1.25).toFixed(0));
+      basisSlider.setAttribute('max', newMaxBasis);
+      if (state.costBasis > newMaxBasis) {
+        basisSlider.setAttribute('value', newMaxBasis);
+        state.costBasis = newMaxBasis;
+      }
+      sparklineData = newSparklineData;
+      generateSparkline(sparklineData);
+      calculate();
+    };
+    const generateSparkline = (data) => {
+      const svg = document.querySelector('#sparkline');
+      if (!svg || !data || data.length === 0) return;
+      const polyline = svg.querySelector('.sparkline-path');
+      const width = 100;
+      const height = SPARKLINE_HEIGHT;
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      const prices = data.map(d => d.price || d);
+      const max = Math.max(...prices);
+      const min = Math.min(...prices);
+      const range = max - min === 0 ? 1 : max - min;
+      const points = prices.map((d, i) => {
+        const x = (i / (prices.length - 1)) * width;
+        const y = height - ((d - min) / range) * height;
+        return `${x.toFixed(2)},${y.toFixed(2)}`;
+      }).join(' ');
+      polyline.setAttribute('points', points);
+      polyline.classList.remove('animated');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (polyline.getTotalLength) {
+            const length = polyline.getTotalLength();
+            polyline.style.setProperty('--sparkline-length', length);
+            polyline.classList.add('animated');
+          }
+        });
+      });
+    };
+    const updateTaxHighlight = () => {
+      const container = document.querySelector('.tax-rates');
+      const checkedRadio = document.querySelector('input[name="tax-rate"]:checked');
+      if (!container || !checkedRadio) return;
+      const selectedLabel = checkedRadio.parentElement;
+      container.style.setProperty('--selection-offset', `${selectedLabel.offsetLeft}px`);
+      container.style.setProperty('--selection-width', `${selectedLabel.offsetWidth}px`);
+    };
+    const getTaxBrackets = () => TAX_CONFIG_2025;
+    const getTaxRates = (income, status) => {
+      const brackets = getTaxBrackets();
+      const getRate = (b, inc) => Object.keys(b).find(rate => inc <= b[rate]);
+      const formatK = (val) => `$${(val/1000).toFixed(0)}k`;
+      return {
+        longTerm15: {
+          rate: 0.15,
+          description: `15% bracket for long-term gains (income between ${formatK(brackets.longTerm[status][0]+1)} and ${formatK(brackets.longTerm[status][0.15])}).`,
+          term: "Long Term"
+        },
+        longTerm20: {
+          rate: 0.20,
+          description: `20% bracket for long-term gains (income above ${formatK(brackets.longTerm[status][0.15])}).`,
+          term: "Long Term"
+        },
+        shortTerm: {
+          rate: parseFloat(getRate(brackets.shortTerm[status], income)),
+          description: `Short-term gains taxed at your ${parseFloat(getRate(brackets.shortTerm[status], income)) * 100}% income bracket.`,
+          term: "Short Term"
+        }
+      }
+    };
+    const updateTaxRateOptions = (rates) => {
+      const includeNiit = document.querySelector('#niit-toggle').checked;
+      const NIIT_RATE = getTaxBrackets().niit.rate;
+      const rateInputs = document.querySelectorAll('input[name="tax-rate"]');
+      const [rate1, rate2, rate3] = [rates.longTerm15, rates.longTerm20, rates.shortTerm];
+      const configureRate = (input, rateInfo) => {
+        let finalRate = rateInfo.rate;
+        if (includeNiit && rateInfo.term === "Long Term") {
+          finalRate += NIIT_RATE;
+        }
+        input.value = finalRate.toFixed(3);
+        input.dataset.description = rateInfo.description;
+        input.dataset.term = rateInfo.term;
+        input.nextElementSibling.innerHTML = `<span class="tax-rate-percent">${(finalRate * 100).toFixed(1)}<span class="percent-sign">%</span></span><span class="tax-rate-term">${rateInfo.term}</span>`;
+      };
+      configureRate(rateInputs[0], rate1);
+      configureRate(rateInputs[1], rate2);
+      configureRate(rateInputs[2], rate3);
+      calculate();
+    };
+    const updateTaxLogic = (isUserInitiated = false) => {
+      const incomeInput = document.querySelector('#income-input');
+      const statusRadio = document.querySelector('input[name="filing-status"]:checked');
+      const income = parseFloat(incomeInput.value.replace(/,/g, '')) || 0;
+      const status = statusRadio.value;
+      if (!isUserInitiated) {
+        const niitThreshold = getTaxBrackets().niit.threshold[status];
+        document.querySelector('#niit-toggle').checked = income > niitThreshold;
+      }
+      const rates = getTaxRates(income, status);
+      updateTaxRateOptions(rates);
+      renderBackPanel();
+    };
+    const calculate = (overridePrice = null) => {
+      let currentPrice;
+      if (overridePrice !== null) {
+        currentPrice = overridePrice;
+      } else {
+        currentPrice = parseFloat(document.querySelector('#stock-price-input').value) || 0;
+      }
+      const {
+        shares,
+        costBasis
+      } = state;
+      const totalGainLoss = (currentPrice - costBasis) * shares;
+      const currentCheckedRadio = document.querySelector('input[name="tax-rate"]:checked');
+      let finalTaxRate;
+      if (currentCheckedRadio && currentCheckedRadio.dataset.term === 'Short Term') {
+        finalTaxRate = parseFloat(currentCheckedRadio.value);
+      } else if (manualTaxRateOverride) {
+        finalTaxRate = parseFloat(currentCheckedRadio.value);
+      } else {
+        const income = parseFloat(document.querySelector('#income-input').value.replace(/,/g, '')) || 0;
+        const status = document.querySelector('input[name="filing-status"]:checked').value;
+        const brackets = getTaxBrackets();
+        const longTermThreshold15 = brackets.longTerm[status][0.15];
+        const effectiveIncome = income + totalGainLoss;
+        const rate15Radio = document.querySelector('#rate1');
+        const rate20Radio = document.querySelector('#rate2');
+        if (effectiveIncome <= longTermThreshold15) {
+          rate15Radio.checked = true;
+          finalTaxRate = parseFloat(rate15Radio.value);
+        } else {
+          rate20Radio.checked = true;
+          finalTaxRate = parseFloat(rate20Radio.value);
+        }
+      }
+      state.taxRate = finalTaxRate;
+      const newlyCheckedRadio = document.querySelector('input[name="tax-rate"]:checked');
+      if (newlyCheckedRadio) {
+        document.querySelector('#tax-description-footnote').textContent = newlyCheckedRadio.dataset.description;
+      }
+      updateTaxHighlight();
+      const estimatedTax = totalGainLoss > 0 ? totalGainLoss * finalTaxRate : totalGainLoss;
+      const netValue = shares * currentPrice;
+      const totalValue = netValue - (totalGainLoss > 0 ? estimatedTax : 0);
+      // Update Tooltip Content
+      tooltipContent.total = `Total take-home value. <br> Net Value: ${formatCurrency(netValue, false)} <br> - Est. Tax: ${formatCurrency(totalGainLoss > 0 ? estimatedTax : 0, false)} <br> = ${formatCurrency(totalValue, false)}`;
+      if (totalGainLoss >= 0) {
+        const niitRateNum = document.querySelector('#niit-toggle').checked ? getTaxBrackets().niit.rate : 0;
+        const baseRateNum = finalTaxRate - niitRateNum;
+        tooltipContent.tax = `Total tax owed on gains. <br> (${(baseRateNum * 100).toFixed(1)}% Base Rate ${niitRateNum > 0 ? '+ ' + (niitRateNum * 100).toFixed(1) + '% NIIT' : ''}) <br> &times; Gain of ${formatCurrency(totalGainLoss, false)} <br> = ${formatCurrency(estimatedTax, false)}`;
+      } else {
+        tooltipContent.tax = `Net loss of ${formatCurrency(totalGainLoss, false)}. This can be used to offset other gains (no tax owed).`;
+      }
+      // Left side ("Total")
+      const totalOutputEl = document.querySelector('#total-gain-loss-output');
+      document.querySelector('#total-gain-loss-label .info-icon').style.display = 'inline-flex'; // Show icon
+      totalOutputEl.querySelector('.output-value').textContent = formatCurrency(totalValue);
+      totalOutputEl.querySelector('.output-footnote').textContent = `out of ${formatCurrency(netValue, false)} net`;
+      totalOutputEl.classList.add('gain'); // Always green
+      // Right side ("Estimated Tax" / "Tax Loss")
+      const taxOutputEl = document.querySelector('#estimated-tax-output');
+      const taxLabelEl = document.querySelector('#estimated-tax-label');
+      const taxFootnoteEl = taxOutputEl.querySelector('.output-footnote');
+      const taxValueEl = taxOutputEl.querySelector('.output-value');
+      taxLabelEl.querySelector('.info-icon').style.display = 'inline-flex'; // Show icon
+      taxOutputEl.classList.remove('gain', 'loss');
+      if (totalGainLoss >= 0) {
+        taxOutputEl.classList.add('gain'); // Red for positive tax
+        taxLabelEl.querySelector('span:first-child').textContent = 'Estimated Tax';
+        taxValueEl.textContent = formatCurrency(estimatedTax);
+        taxFootnoteEl.textContent = `${(finalTaxRate * 100).toFixed(1)}% of ${formatCurrency(totalGainLoss, false)} in gains`;
+      } else {
+        taxOutputEl.classList.add('loss'); // Green for tax loss
+        taxLabelEl.querySelector('span:first-child').textContent = 'Tax Loss';
+        taxValueEl.textContent = formatCurrency(estimatedTax); // estimatedTax is already negative here
+        taxFootnoteEl.textContent = ``;
+      }
+      renderHeadroom(); // Update headroom whenever calculations change
+    };
+    const flipCard = (view) => {
+      state.isFlipped = view === 'back';
+      if (state.isFlipped) {
+        renderBackPanel();
+      }
+      calculatorWrapper.classList.toggle('is-flipped', state.isFlipped);
+      updateCardHeight();
+    };
+    const saveTransaction = () => {
+      const {
+        shares,
+        costBasis
+      } = state;
+      const taxRate = parseFloat(document.querySelector('input[name="tax-rate"]:checked').value);
+      const currentPrice = parseFloat(document.querySelector('#stock-price-input').value) || 0;
+      const totalGainLoss = (currentPrice - costBasis) * shares;
+      const estimatedTax = totalGainLoss > 0 ? totalGainLoss * taxRate : 0;
+      const term = document.querySelector('input[name="tax-rate"]:checked').dataset.term;
+      const newTransaction = {
+        id: Date.now(),
+        type: term,
+        shares: shares,
+        costBasis: costBasis,
+        salePrice: currentPrice,
+        gain: totalGainLoss,
+        tax: estimatedTax
+      };
+      state.transactions.push(newTransaction);
+      localStorage.setItem('capitalGainsTransactions', JSON.stringify(state.transactions));
+      state.lastAddedId = newTransaction.id;
+      renderBackPanel();
+      flipCard('back');
+    };
+    const deleteTransaction = (id) => {
+      state.transactions = state.transactions.filter(t => t.id !== id);
+      localStorage.setItem('capitalGainsTransactions', JSON.stringify(state.transactions));
+      renderBackPanel();
+    };
+    const renderTable = () => {
+      const tbody = document.querySelector('#transactions-tbody');
+      tbody.innerHTML = state.transactions.map(t => {
+        const gross = t.shares * t.salePrice;
+        return `<tr class="${t.id === state.lastAddedId ? 'is-new' : ''}">
+                <td><span data-tooltip="${t.type}">${t.type === 'Long Term' ? 'LT' : 'ST'}</span></td>
+                <td>${t.shares} / ${formatCurrency(t.costBasis, false)}</td>
+                <td>${formatCurrency(t.salePrice, false)}</td>
+                <td class="gain">${formatCurrency(gross)}</td>
+                <td class="${t.gain >= 0 ? 'loss' : 'gain'}">${formatCurrency(t.tax)}</td>
+                <td><button class="delete-btn" data-id="${t.id}">&times;</button></td>
+            </tr>`
+      }).join('');
+      if (state.lastAddedId) {
+        state.lastAddedId = null;
+      }
+      const totalGross = state.transactions.reduce((acc, t) => acc + (t.shares * t.salePrice), 0);
+      const totalTax = state.transactions.reduce((acc, t) => acc + t.tax, 0);
+      document.querySelector('#total-gross-footer').textContent = formatCurrency(totalGross);
+      document.querySelector('#total-tax-footer').textContent = formatCurrency(totalTax);
+      document.querySelector('#total-tax-footer').className = totalTax >= 0 ? 'loss' : 'gain';
+    };
+    const renderHeadroom = () => {
+      const income = parseFloat(document.querySelector('#income-input').value.replace(/,/g, '')) || 0;
+      const status = document.querySelector('input[name="filing-status"]:checked').value;
+      const brackets = getTaxBrackets();
+      // Sum gains from already saved transactions
+      const totalSavedLongTermGains = state.transactions
+        .filter(t => t.type === 'Long Term' && t.gain > 0)
+        .reduce((acc, t) => acc + t.gain, 0);
+      const totalSavedShortTermGains = state.transactions
+        .filter(t => t.type === 'Short Term' && t.gain > 0)
+        .reduce((acc, t) => acc + t.gain, 0);
+      // Get current unsaved gain from front panel to make headroom calculation dynamic
+      const currentPrice = parseFloat(document.querySelector('#stock-price-input').value) || 0;
+      const {
+        shares,
+        costBasis
+      } = state;
+      const currentUnsavedGain = (currentPrice - costBasis) * shares;
+      const currentTerm = document.querySelector('input[name="tax-rate"]:checked')?.dataset.term;
+      let currentUnsavedLongTermGain = 0;
+      let currentUnsavedShortTermGain = 0;
+      if (currentUnsavedGain > 0) {
+        if (currentTerm === 'Long Term') {
+          currentUnsavedLongTermGain = currentUnsavedGain;
+        } else {
+          currentUnsavedShortTermGain = currentUnsavedGain;
+        }
+      }
+      // Include profits from current potential sale in income for headroom
+      const effectiveIncomeLong = income + totalSavedLongTermGains + currentUnsavedLongTermGain;
+      const effectiveIncomeShort = income + totalSavedShortTermGains + currentUnsavedShortTermGain;
+      const findNextBracket = (b, inc) => {
+        const currentRate = Object.keys(b).find(rate => inc <= b[rate]);
+        return b[currentRate] === Infinity ? Infinity : b[currentRate];
+      };
+      const nextLongTermBracket = findNextBracket(brackets.longTerm[status], effectiveIncomeLong);
+      const nextShortTermBracket = findNextBracket(brackets.shortTerm[status], effectiveIncomeShort);
+      const longTermHeadroom = nextLongTermBracket === Infinity ? Infinity : Math.max(0, nextLongTermBracket - effectiveIncomeLong);
+      const shortTermHeadroom = nextShortTermBracket === Infinity ? Infinity : Math.max(0, nextShortTermBracket - effectiveIncomeShort);
+      document.querySelector('#long-term-headroom').textContent = formatCurrency(longTermHeadroom);
+      document.querySelector('#short-term-headroom').textContent = formatCurrency(shortTermHeadroom);
+      // Update Tooltip for LT Headroom
+      const thresholdLT = brackets.longTerm[status][0.15];
+      const totalGainsLT = effectiveIncomeLong - income; // This is saved + current sim
+      tooltipContent.ltHeadroom = `20% Tax Threshold: ${formatCurrency(thresholdLT, false)} <br> - (Income: ${formatCurrency(income, false)} <br> + Gains: ${formatCurrency(totalGainsLT, false)}) <br> = ${formatCurrency(longTermHeadroom, false)} Headroom`;
+      // Update Tooltip for ST Headroom
+      const thresholdST = nextShortTermBracket; // This is already the *next* bracket threshold
+      const totalGainsST = effectiveIncomeShort - income;
+      tooltipContent.stHeadroom = `Next Tax Bracket: ${formatCurrency(thresholdST, false)} <br> - (Income: ${formatCurrency(income, false)} <br> + Gains: ${formatCurrency(totalGainsST, false)}) <br> = ${formatCurrency(shortTermHeadroom, false)} Headroom`;
+    };
+    const renderBackPanel = () => {
+      const incomeInputFront = document.querySelector('#income-input');
+      const incomeInputBack = document.querySelector('#income-input-back');
+      if (incomeInputFront && incomeInputBack) {
+        incomeInputBack.value = incomeInputFront.value;
+      }
+      renderTable();
+      renderHeadroom();
+      updateCardHeight();
+    };
+    // --- Dev Tools ---
+    const populateDevTaxEditor = () => {
+      const config = getTaxBrackets();
+      document.querySelector('#dev-lt-joint').setAttribute('value', config.longTerm.joint['0.15']);
+      document.querySelector('#dev-lt-single').setAttribute('value', config.longTerm.single['0.15']);
+      document.querySelector('#dev-niit-joint').setAttribute('value', config.niit.threshold.joint);
+      document.querySelector('#dev-niit-single').setAttribute('value', config.niit.threshold.single);
+    };
+    const handleTaxConfigUpdate = () => {
+      const newConfig = JSON.parse(JSON.stringify(TAX_CONFIG_2025));
+      newConfig.longTerm.joint['0.15'] = parseInt(document.querySelector('#dev-lt-joint').value, 10);
+      newConfig.longTerm.single['0.15'] = parseInt(document.querySelector('#dev-lt-single').value, 10);
+      newConfig.niit.threshold.joint = parseInt(document.querySelector('#dev-niit-joint').value, 10);
+      newConfig.niit.threshold.single = parseInt(document.querySelector('#dev-niit-single').value, 10);
+      TAX_CONFIG_2025 = newConfig;
+      logToDevPanel('Tax Config Updated from Dev Panel', TAX_CONFIG_2025);
+      manualTaxRateOverride = false; // Reset override so logic recalculates
+      updateTaxLogic();
+    };
+    // --- INITIALIZATION & EVENT LISTENERS ---
+    const addEventListeners = () => {
+      const appTooltip = document.querySelector('#app-tooltip');
+      const settingsToggle = document.querySelector('.settings-toggle');
+      const settingsContainer = document.querySelector('.settings');
+      const settingsContentWrapper = document.querySelector('.settings-content-wrapper');
+      settingsToggle.addEventListener('click', () => {
+        const isOpen = settingsContainer.classList.toggle('is-open');
+        settingsToggle.setAttribute('aria-expanded', isOpen);
+        if (isOpen) {
+          settingsContentWrapper.style.maxHeight = settingsContentWrapper.scrollHeight + 'px';
+        } else {
+          settingsContentWrapper.style.maxHeight = null;
+        }
+      });
+      settingsContentWrapper.addEventListener('transitionend', () => {
+        updateCardHeight();
+      });
+      document.querySelectorAll('input[name="filing-status"]').forEach(radio => radio.addEventListener('change', () => updateTaxLogic()));
+      const incomeInputFront = document.querySelector('#income-input');
+      const incomeInputBack = document.querySelector('#income-input-back');
+      const syncIncome = (source) => {
+        const target = source.id === 'income-input' ? incomeInputBack : incomeInputFront;
+        const cursorStart = source.selectionStart;
+        const originalLength = source.value.length;
+        let value = source.value.replace(/[^0-9]/g, '');
+        let formattedValue = '';
+        if (value) {
+          formattedValue = parseInt(value, 10).toLocaleString('en-US');
+        }
+        source.value = formattedValue;
+        if (document.activeElement === source) {
+          const newLength = formattedValue.length;
+          const newCursor = cursorStart + (newLength - originalLength);
+          source.setSelectionRange(newCursor, newCursor);
+        }
+        if (target) {
+          target.value = source.value;
+        }
+      };
+      [incomeInputFront, incomeInputBack].forEach(input => {
+        input.addEventListener('input', () => syncIncome(input));
+        input.addEventListener('change', () => {
+          manualTaxRateOverride = false;
+          updateTaxLogic();
+        });
+      });
+      let isDraggingIncome = false,
+        startXIncome = 0,
+        startValueIncome = 0;
+      const startDrag = (e) => {
+        isDraggingIncome = true;
+        startXIncome = e.clientX;
+        startValueIncome = parseFloat(e.target.value.replace(/,/g, '')) || 0;
+        e.target.style.cursor = 'ew-resize';
+        document.body.style.cursor = 'ew-resize';
+        document.body.style.userSelect = 'none';
+      };
+      const endDrag = () => {
+        if (isDraggingIncome) {
+          isDraggingIncome = false;
+          incomeInputFront.style.cursor = 'ew-resize';
+          incomeInputBack.style.cursor = 'ew-resize';
+          document.body.style.cursor = 'default';
+          document.body.style.userSelect = 'auto';
+        }
+      };
+      const onDrag = (e) => {
+        if (isDraggingIncome) {
+          const dx = e.clientX - startXIncome;
+          let newValue = startValueIncome + dx * 500;
+          newValue = Math.max(0, Math.min(10000000, Math.round(newValue)));
+          const activeInput = document.activeElement === incomeInputBack ? incomeInputBack : incomeInputFront;
+          activeInput.value = newValue;
+          activeInput.dispatchEvent(new Event('input', {
+            bubbles: true
+          }));
+          activeInput.dispatchEvent(new Event('change', {
+            bubbles: true
+          }));
+        }
+      };
+      incomeInputFront.addEventListener('mousedown', startDrag);
+      incomeInputBack.addEventListener('mousedown', startDrag);
+      window.addEventListener('mousemove', onDrag);
+      window.addEventListener('mouseup', endDrag);
+      document.querySelector('#niit-toggle').addEventListener('change', () => updateTaxLogic(true));
+      document.querySelector('#shares-slider').addEventListener('change', e => {
+        state.shares = e.detail.value;
+        calculate();
+      });
+      document.querySelector('#cost-basis-slider').addEventListener('change', e => {
+        state.costBasis = e.detail.value;
+        calculate();
+      });
+      document.querySelectorAll('input[name="tax-rate"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          manualTaxRateOverride = true;
+          calculate();
+        });
+      });
+      const tickerSelect = document.querySelector('#stock-ticker-select');
+      const customDialog = document.querySelector('#custom-ticker-dialog');
+      tickerSelect.addEventListener('change', e => {
+        if (e.target.value === 'CUSTOM') {
+          customDialog.showModal();
+        } else {
+          state.ticker = e.target.value;
+          fetchStockData([state.ticker]);
+        }
+      });
+      const customTickerForm = document.querySelector('#custom-ticker-form');
+      customTickerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const customInput = document.querySelector('#custom-ticker-input');
+        const newTicker = customInput.value.trim().toUpperCase();
+        customDialog.close();
+        if (!newTicker) return;
+        if (![...tickerSelect.options].some(opt => opt.value === newTicker)) {
+          const newOption = new Option(newTicker, newTicker);
+          tickerSelect.add(newOption, tickerSelect.options[tickerSelect.options.length - 1]);
+        }
+        tickerSelect.value = newTicker;
+        state.ticker = newTicker;
+        customInput.value = '';
+        await fetchStockData([newTicker], true);
+      });
+      customDialog.addEventListener('close', () => {
+        if (tickerSelect.value === 'CUSTOM') {
+          tickerSelect.value = state.ticker;
+        }
+      });
+      document.querySelector('#footer-flip-btn').addEventListener('click', () => flipCard(state.isFlipped ? 'front' : 'back'));
+      document.querySelector('#refresh-btn').addEventListener('click', async () => {
+        if (isInHistoryMode) {
+          setHistoryMode(false);
+          updateUIWithData();
+        } else {
+          manualTaxRateOverride = false;
+          // Clicking refresh ALWAYS fetches live data and updates the state/UI
+          state.apiOverrideMode = 'live';
+          document.querySelector('input[name="api-override"][value="live"]').checked = true;
+          logToDevPanel('Manual Refresh Triggered (Forcing Live)', {
+            ticker: state.ticker
+          });
+          await fetchStockData([state.ticker], true, 'live');
+        }
+      });
+      document.querySelector('#stock-price-input').addEventListener('input', e => {
+        setHistoryMode(false);
+        calculate(parseFloat(e.target.value));
+      });
+      const sparklineHoverArea = document.querySelector('#sparkline-hover-area');
+      const hoverDot = document.querySelector('#sparkline-hover-dot');
+      sparklineHoverArea.addEventListener('mousemove', (e) => {
+        const rect = sparklineHoverArea.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const width = rect.width;
+        if (sparklineData.length > 1) {
+          const index = Math.min(sparklineData.length - 1, Math.max(0, Math.round((x / width) * (sparklineData.length - 1))));
+          const dataPoint = sparklineData[index];
+          if (dataPoint) {
+            const prices = sparklineData.map(d => d.price);
+            const max = Math.max(...prices);
+            const min = Math.min(...prices);
+            const range = max - min === 0 ? 1 : max - min;
+            const y = SPARKLINE_HEIGHT - ((dataPoint.price - min) / range) * SPARKLINE_HEIGHT;
+            appTooltip.innerHTML = `${dataPoint.date}<br>$${dataPoint.price.toFixed(2)}`;
+            appTooltip.style.left = `${e.clientX + 15}px`;
+            appTooltip.style.top = `${e.clientY + 15}px`;
+            appTooltip.classList.add('is-visible');
+            hoverDot.setAttribute('cx', (x / width) * 100);
+            hoverDot.setAttribute('cy', y);
+          }
+        }
+      });
+      sparklineHoverArea.addEventListener('mouseleave', () => {
+        appTooltip.classList.remove('is-visible');
+      });
+      sparklineHoverArea.addEventListener('click', (e) => {
+        const rect = sparklineHoverArea.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const width = rect.width;
+        if (sparklineData.length > 1) {
+          const index = Math.min(sparklineData.length - 1, Math.max(0, Math.round((x / width) * (sparklineData.length - 1))));
+          const dataPoint = sparklineData[index];
+          if (dataPoint) {
+            document.querySelector('#stock-price-input').value = dataPoint.price.toFixed(2);
+            calculate();
+            setHistoryMode(true, dataPoint.date);
+          }
+        }
+      });
+      const transactionsTbody = document.querySelector('#transactions-tbody');
+      transactionsTbody.addEventListener('mouseover', e => {
+        const tooltipTarget = e.target.closest('[data-tooltip]');
+        if (tooltipTarget) {
+          appTooltip.textContent = tooltipTarget.dataset.tooltip;
+          appTooltip.classList.add('is-visible');
+        }
+      });
+      transactionsTbody.addEventListener('mouseout', e => {
+        if (e.target.closest('[data-tooltip]')) {
+          appTooltip.classList.remove('is-visible');
+        }
+      });
+      transactionsTbody.addEventListener('mousemove', (e) => {
+        if (e.target.closest('[data-tooltip]')) {
+          appTooltip.style.left = `${e.clientX + 15}px`;
+          appTooltip.style.top = `${e.clientY + 15}px`;
+        }
+      });
+      document.querySelectorAll('.info-icon').forEach(icon => {
+        icon.addEventListener('mouseover', (e) => {
+          const key = e.target.dataset.tooltipKey;
+          if (tooltipContent[key]) {
+            appTooltip.innerHTML = tooltipContent[key];
+            appTooltip.classList.add('is-visible');
+          }
+        });
+        icon.addEventListener('mousemove', (e) => {
+          appTooltip.style.left = `${e.clientX + 15}px`;
+          appTooltip.style.top = `${e.clientY + 15}px`;
+        });
+        icon.addEventListener('mouseout', () => {
+          appTooltip.classList.remove('is-visible');
+        });
+      });
+      document.querySelector('#save-btn').addEventListener('click', () => saveTransaction());
+      document.querySelectorAll('.flip-btn').forEach(btn => {
+        btn.addEventListener('click', () => flipCard(state.isFlipped ? 'front' : 'back'));
+      });
+      document.querySelector('#back-to-calc-btn').addEventListener('click', () => flipCard('front'));
+      const flipper = document.querySelector('.card-flipper');
+      flipper.addEventListener('transitionend', (e) => {
+        if (e.propertyName === 'transform' && state.isFlipped && state.lastAddedId !== null) {
+          renderTable();
+        }
+        if (e.propertyName === 'height' && state.isFlipped) {
+          updateCardHeight();
+        }
+      });
+      document.querySelector('#transactions-tbody').addEventListener('click', e => {
+        if (e.target.classList.contains('delete-btn')) {
+          const id = parseInt(e.target.dataset.id, 10);
+          deleteTransaction(id);
+        }
+      });
+    };
+    // Initial Setup
+    const savedTransactions = localStorage.getItem('capitalGainsTransactions');
+    if (savedTransactions) {
+      state.transactions = JSON.parse(savedTransactions);
+    }
+    // Default to Live unless local cache is very fresh
+    const cache = JSON.parse(localStorage.getItem('alphaVantageCache')) || {};
+    const cachedGoog = cache['GOOG'];
+    if (cachedGoog && (Date.now() - cachedGoog.timestamp < (2 * 60 * 60 * 1000))) { // 2 hour cache
+      state.apiOverrideMode = 'cache';
+      document.querySelector('input[name="api-override"][value="cache"]').checked = true;
+    } else {
+      state.apiOverrideMode = 'live';
+      document.querySelector('input[name="api-override"][value="live"]').checked = true;
+    }
+    window.addEventListener('keydown', (e) => {
+      if (e.key.toLowerCase() === 'd') toggleDevPanel()
+    });
+    document.querySelector('#dev-panel .close-dev-btn').addEventListener('click', () => toggleDevPanel());
+    document.querySelectorAll('input[name="api-override"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        state.apiOverrideMode = e.target.value;
+        logToDevPanel('API Override Mode Changed', {
+          now: state.apiOverrideMode
+        });
+        fetchStockData([state.ticker], true); // Refetch data with the new setting
+      });
+    });
+    document.querySelector('#apply-tax-config').addEventListener('click', handleTaxConfigUpdate);
+    addEventListeners();
+    populateDevTaxEditor();
+    logToDevPanel(`Tax Config Loaded for Year ${TAX_CONFIG_2025.year}`, TAX_CONFIG_2025);
+    fetchStockData(['GOOG'], false, state.apiOverrideMode); // Initial load respects default mode
+    setTimeout(() => {
+      updateTaxLogic();
+      updateCardHeight();
+    }, 150);
+  </script>
+
+</body>
+
+</html>
