@@ -48,7 +48,7 @@
       min-height: 100vh;
       padding: var(--size-3);
       accent-color: var(--brand);
-      overflow:hidden;
+      overflow:auto;
       height:100%;
     }
 
@@ -1201,6 +1201,10 @@
 
     @media (max-width: 480px) {
 
+      body {
+        padding: var(--size-1);
+      }
+
       .grid,
       .slider-pair,
       .headroom-container,
@@ -1209,7 +1213,8 @@
         grid-template-columns: 1fr;
       }
 
-      .card-front {
+      .card-front,
+      .card-back {
         padding: var(--size-3);
       }
 
@@ -1226,6 +1231,201 @@
       #dev-panel {
         width: 100%;
         max-width: 100%;
+      }
+
+      /* Better touch targets */
+      .tax-rates-option {
+        padding: var(--size-2) var(--size-2);
+        min-height: 44px;
+        min-width: 44px;
+      }
+
+      /* Improved tax rate layout on mobile */
+      .tax-rates {
+        flex-wrap: wrap;
+        gap: var(--size-4);
+        justify-content: space-between;
+      }
+
+      /* Flip buttons hidden on mobile - use swipe or back button instead */
+      .flip-btn {
+        display: none !important;
+      }
+
+      /* Make sure header stacks nicely */
+      .header {
+        gap: var(--size-2);
+      }
+
+      /* Responsive table on back of card */
+      .transactions-table {
+        font-size: var(--font-size-00);
+      }
+
+      .transactions-table th,
+      .transactions-table td {
+        padding: var(--size-1);
+      }
+
+      /* Hide less critical columns on very small screens */
+      .transactions-table th:nth-child(2),
+      .transactions-table td:nth-child(2) {
+        font-size: var(--font-size-000);
+      }
+
+      /* Smaller output values on mobile */
+      .output-value {
+        font-size: var(--font-size-1);
+      }
+
+      /* Better footer button touch targets */
+      .footer-btn {
+        padding: var(--size-2);
+        min-height: 44px;
+      }
+
+      /* Adjust save button for mobile */
+      .save-as-sale-btn {
+        width: 100%;
+        justify-content: center;
+        min-height: 44px;
+      }
+
+      /* Income sync container adjustments */
+      .income-sync-container .income-input-wrapper {
+        width: 100%;
+      }
+
+      /* Better button sizes */
+      #refresh-btn,
+      .close-dev-btn,
+      #back-to-calc-btn {
+        min-height: 44px;
+        min-width: 44px;
+      }
+
+      /* Sparkline adjustments */
+      .sparkline-container {
+        min-width: 80px;
+      }
+
+      #sparkline {
+        max-width: 100px;
+      }
+
+      /* Better text wrapping */
+      .output-footnote {
+        white-space: normal;
+      }
+
+      /* Improved dialog on mobile */
+      #custom-ticker-dialog {
+        width: calc(100vw - var(--size-6));
+        padding: var(--size-4);
+      }
+
+      /* Settings adjustments */
+      .settings-content {
+        padding: 0 var(--size-2) var(--size-4) var(--size-2);
+      }
+    }
+
+    /* Additional breakpoint for very small devices */
+    @media (max-width: 360px) {
+
+      body {
+        font-size: var(--font-size-000);
+        padding: var(--size-0);
+      }
+
+      .card-front,
+      .card-back {
+        padding: var(--size-2);
+      }
+
+      #stock-price-input,
+      #stock-ticker-select {
+        font-size: var(--font-size-2);
+      }
+
+      /* Stack tax rates vertically on very small screens */
+      .tax-rates {
+        flex-direction: column;
+      }
+
+      .tax-rates-option {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: var(--size-2);
+      }
+
+      /* Compact table even more */
+      .transactions-table {
+        font-size: var(--font-size-000);
+      }
+
+      .transactions-table th,
+      .transactions-table td {
+        padding: var(--size-1) 2px;
+      }
+
+      /* Reduce heading sizes */
+      .card-back h2 {
+        font-size: var(--font-size-1);
+      }
+
+      /* Smaller gaps */
+      .grid {
+        gap: var(--size-3);
+      }
+
+      .header {
+        gap: var(--size-1);
+        margin-block-end: calc(var(--size-3) * -1);
+      }
+
+      /* Even more compact sparkline */
+      #sparkline {
+        width: 80px;
+        height: 24px;
+      }
+
+      .sparkline-container {
+        min-width: 60px;
+      }
+
+      /* Make status indicator even smaller */
+      .status-indicator-container {
+        width: var(--size-4);
+      }
+    }
+
+    /* Landscape mobile devices */
+    @media (max-height: 600px) and (orientation: landscape) {
+
+      body {
+        padding: var(--size-2);
+        min-height: auto;
+      }
+
+      .card-front,
+      .card-back {
+        padding: var(--size-3);
+      }
+
+      /* Reduce vertical spacing in landscape */
+      .grid {
+        gap: var(--size-2);
+      }
+
+      .control {
+        gap: var(--size-1);
+      }
+
+      /* Make table wrapper more compact */
+      .table-wrapper {
+        max-height: 250px;
       }
     }
   </style>
