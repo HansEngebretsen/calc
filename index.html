@@ -9,17 +9,25 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/png" href="/calc/favicon-96x96.png" sizes="96x96" />
-<link rel="icon" type="image/svg+xml" href="/calc/favicon.svg" />
-<link rel="shortcut icon" href="/calc/favicon.ico" />
-<link rel="apple-touch-icon" sizes="180x180" href="/calc/apple-touch-icon.png" />
-<link rel="manifest" href="/calc/site.webmanifest" />
+  <link rel="icon" type="image/png" href="/calc/favicon/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="/calc/favicon/favicon.svg" />
+<link rel="shortcut icon" href="/calc/favicon/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="/calc/favicon/apple-touch-icon.png" />
+<link rel="manifest" href="/calc/favicon/site.webmanifest" />
   <style>
     @font-face {
       font-family: 'Syntax';
       src: url('https://assets.codepen.io/18320/FontWithASyntaxHighlighter-Regular.woff2') format('woff2');
     }
-
+    * {
+      box-sizing: border-box;
+    }
+    a, a:visited {
+      color:white;
+    }
+    p {
+      color: rgba(255,255,255,.4);
+    }
     :root {
       --brand: var(--green-5);
       --surface-1: var(--gray-11);
@@ -40,6 +48,8 @@
       min-height: 100vh;
       padding: var(--size-3);
       accent-color: var(--brand);
+      overflow:hidden;
+      height:100%;
     }
 
     *,
@@ -1452,6 +1462,9 @@
     </div>
     <div id="dev-log"></div>
   </div>
+  <p>
+      <span class="footer">For estimation purposes only. Consult advisor for real nubmers and advice.</span> | <span>Made by <a href="haaans.com/about">Hans</a>, source on a   <a href="https://github.com/HansEngebretsen/calc">Github ↗</a></span>  
+  </p>
 
   <script type="module">
     // --- PRETTY SLIDER WEB COMPONENT ---
