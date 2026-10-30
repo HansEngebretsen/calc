@@ -1,17 +1,17 @@
 # `calc`
 
-Input your shares, basis, and income. Get an immediate estimate of your capital gains tax and total proceeds from a sale.
+A capital gains calculator for one stock sale. Pick a ticker, slide your shares and cost basis, and see the tax and what you keep at once.
 
 
-<div align = center>
+<div align="center">
   
-[<kbd>  <br>haaans.com/calc <br>  <br>  </kbd>](https://haaans.com/calc)
+[<kbd><br>haaans.com/calc<br><br></kbd>](https://haaans.com/calc)
 
 </div>
 
 
 <p align="center">
-<img src="demos/autocalc-estimated-tax-black-nodrop.gif" alt="Estimate Tax Liability Instantly" width="500">
+<img src="demos/hero.png" alt="calc" width="500">
 </p>
 
 ## Features
@@ -19,32 +19,38 @@ Input your shares, basis, and income. Get an immediate estimate of your capital 
 <table>
 <tr valign="top">
 <td width="50%">
-<h3>Automatic Tax Rate & NIIT Calculation</h3>
-<p>The app automatically determines your correct tax rate and accounts for the Net Investment Income Tax (NIIT) based on your filing status and income parameters.</p>
+<h3>Drag shares and basis</h3>
+<p>Slide how many shares you sell and what you paid for them. The total you keep and the estimated tax follow every step.</p>
 </td>
 <td width="50%">
-<img src="demos/auto-calculate-based-on-niit.gif" alt="NIIT calculation">
-</td>
-</tr>
-<tr valign="top">
-<td width="50%">
-<img src="demos/custom-stock-price.gif" alt="Custom stock price">
-
-
-<img src="demos/historical-prices.gif" alt="Historical prices">
-</td>
-<td width="50%">
-<h3>Flexible Price Inputs</h3>
-<p>Set your sale price using live ticker data, a custom price, or historical data.</p>
+<img src="demos/drag.gif" alt="Drag shares and basis">
 </td>
 </tr>
 <tr valign="top">
 <td width="50%">
-<h3>Tax Bracket Headroom & Local Storage</h3>
-<p>Save sales transactions directly to your browser's local storage. The app calculates your remaining "headroom"—the amount you can sell before breaching the next short-term or long-term tax bracket.</p>
+<img src="demos/rate.gif" alt="Set your income and the rate follows">
 </td>
 <td width="50%">
-<img src="demos/save-rolling-totals.gif" alt="Saving totals and calculating headroom">
+<h3>Set your income, the rate follows</h3>
+<p>Scrub your yearly income or switch filing status under Options. The right long-term bracket and the 3.8% NIIT are picked for you.</p>
+</td>
+</tr>
+<tr valign="top">
+<td width="50%">
+<h3>Sell at an earlier day's price</h3>
+<p>Scrub the sparkline through the last month and click a day: its close becomes the sale price. The ✕ takes you back to live.</p>
+</td>
+<td width="50%">
+<img src="demos/history.gif" alt="Sell at an earlier day's price">
+</td>
+</tr>
+<tr valign="top">
+<td width="50%">
+<img src="demos/save.gif" alt="Save sales and see your headroom">
+</td>
+<td width="50%">
+<h3>Save sales, see your headroom</h3>
+<p>Save a sale and the card flips to the year's sales with running totals, and how much more you can sell before the next bracket.</p>
 </td>
 </tr>
 </table>
