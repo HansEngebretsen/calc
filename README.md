@@ -1,6 +1,6 @@
 # `calc`
 
-A capital gains calculator for one stock sale. Pick a ticker, slide your shares and cost basis, and see the tax and what you keep at once.
+Understand cap gains for a single stock sale. Pick a ticker, slide your shares and cost basis, and see the tax and what you keep at once.
 
 
 <div align="center">
